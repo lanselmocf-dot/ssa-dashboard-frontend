@@ -8,6 +8,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
+  message?: string;
+  pagination?: { pagina: number; limite: number; total: number; total_paginas: number };
   error?: {
     code: string;
     message: string;

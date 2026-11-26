@@ -409,16 +409,15 @@ export function OperatorTerminal() {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
-      <header className="bg-slate-950 text-white shadow-lg">
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4 px-4 py-4 sm:px-6">
+      <header className="border-b border-brand-800 bg-brand-900 text-white shadow-md">
+        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500 text-slate-950">
-              <Factory size={27} aria-hidden />
+            <div className="flex items-center justify-center rounded-xl bg-white p-2 shadow-sm">
+              <img src="/logo-ssa.jpg" alt="SSA Distribuidora" className="h-10 w-auto object-contain" />
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">SSA Distribuidora</p>
-              <h1 className="text-xl font-bold sm:text-2xl">Terminal do operador</h1>
-              <p className="hidden text-sm text-slate-300 sm:block">Chão de fábrica · envase e embalagem</p>
+              <h1 className="text-xl font-bold text-white sm:text-2xl leading-tight">Terminal do operador</h1>
+              <p className="hidden text-xs text-brand-100 sm:block">Chão de fábrica · envase e embalagem</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -427,40 +426,40 @@ export function OperatorTerminal() {
                 {String(usuario?.perfil).toUpperCase() === 'ADMIN' && (
                   <Link
                     to="/admin"
-                    className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800"
+                    className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-brand-100 hover:bg-white/20 hover:text-white transition-colors"
                   >
                     Admin
                   </Link>
                 )}
                 <Link
                   to="/supervisor"
-                  className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800"
+                  className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-brand-100 hover:bg-white/20 hover:text-white transition-colors"
                 >
                   Supervisão
                 </Link>
                 {['ADMIN', 'GESTOR'].includes(String(usuario?.perfil).toUpperCase()) && (
                   <Link
                     to="/gestor"
-                    className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800"
+                    className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-brand-100 hover:bg-white/20 hover:text-white transition-colors"
                   >
                     Gestão
                   </Link>
                 )}
               </div>
             )}
-            <div className="hidden text-right sm:block">
-              <p className="font-semibold">{usuario?.nome}</p>
-              <p className="text-xs uppercase tracking-wide text-slate-300">{usuario?.perfil}</p>
+            <div className="hidden text-right sm:block leading-tight">
+              <p className="text-sm font-semibold text-white">{usuario?.nome}</p>
+              <p className="text-xs uppercase tracking-wide text-brand-200">{usuario?.perfil}</p>
             </div>
-            <Button
-              variant="secondary"
+            <button
+              type="button"
               onClick={logout}
-              className="min-h-12 border-slate-600 bg-slate-800 px-4 text-white hover:bg-slate-700"
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3.5 py-2 text-xs font-medium text-white hover:bg-white/20 transition-colors"
               aria-label="Sair da conta"
             >
-              <LogOut size={18} aria-hidden />
+              <LogOut size={16} aria-hidden />
               <span className="hidden sm:inline">Sair</span>
-            </Button>
+            </button>
           </div>
         </div>
       </header>
@@ -487,22 +486,22 @@ export function OperatorTerminal() {
           </div>
         )}
 
-        <section aria-labelledby="contexto-title" className="rounded-2xl bg-slate-900 p-4 text-white shadow-md sm:p-5">
+        <section aria-labelledby="contexto-title" className="rounded-2xl border border-brand-800 bg-brand-900 p-4 text-white shadow-md sm:p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h2 id="contexto-title" className="text-lg font-bold">Contexto operacional</h2>
-              <p className="text-sm text-slate-300">Confirme a máquina e o turno antes do apontamento.</p>
+              <p className="text-sm text-brand-100">Confirme a máquina e o turno antes do apontamento.</p>
             </div>
             {carregandoCatalogos && <span className="text-sm font-semibold text-emerald-300">Carregando seletores…</span>}
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor="maquina-operador" className="mb-1.5 block text-sm font-bold text-slate-200">
+              <label htmlFor="maquina-operador" className="mb-1.5 block text-sm font-bold text-white">
                 Máquina
               </label>
               <select
                 id="maquina-operador"
-                className="block h-14 w-full rounded-lg border-2 border-slate-300 bg-white px-4 text-lg font-semibold text-slate-950 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="block h-14 w-full rounded-lg border-2 border-slate-300 bg-white px-4 text-lg font-semibold text-slate-950 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 value={maquinaId}
                 onChange={(evento) => setMaquinaId(evento.target.value)}
                 disabled={carregandoCatalogos}
@@ -519,12 +518,12 @@ export function OperatorTerminal() {
               )}
             </div>
             <div>
-              <label htmlFor="turno-operador" className="mb-1.5 block text-sm font-bold text-slate-200">
+              <label htmlFor="turno-operador" className="mb-1.5 block text-sm font-bold text-white">
                 Turno ativo
               </label>
               <select
                 id="turno-operador"
-                className="block h-14 w-full rounded-lg border-2 border-slate-300 bg-white px-4 text-lg font-semibold text-slate-950 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="block h-14 w-full rounded-lg border-2 border-slate-300 bg-white px-4 text-lg font-semibold text-slate-950 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 value={turnoId}
                 onChange={(evento) => setTurnoId(evento.target.value)}
                 disabled={carregandoCatalogos}
@@ -541,12 +540,12 @@ export function OperatorTerminal() {
               )}
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-700 pt-3 text-sm">
-            <span className="inline-flex items-center gap-2 text-slate-300">
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-brand-800 pt-3 text-sm">
+            <span className="inline-flex items-center gap-2 text-brand-100">
               <Factory size={17} aria-hidden />
               {maquinaSelecionada ? `${maquinaSelecionada.codigo} · ${maquinaSelecionada.nome}` : 'Máquina não selecionada'}
             </span>
-            <span className="inline-flex items-center gap-2 text-slate-300">
+            <span className="inline-flex items-center gap-2 text-brand-100">
               <Clock3 size={17} aria-hidden />
               {turnoSelecionado
                 ? `${turnoSelecionado.nome} · ${formatarHora(turnoSelecionado.hora_inicio)}–${formatarHora(turnoSelecionado.hora_fim)}`

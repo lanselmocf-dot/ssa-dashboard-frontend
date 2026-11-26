@@ -15,9 +15,12 @@ export function AdminLayout() {
     <div className="min-h-screen">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
-          <div>
-            <h1 className="text-base font-semibold text-slate-900">Governança administrativa</h1>
-            <p className="text-xs text-slate-500">Cadastros, parametrização e auditoria · SSA Distribuidora</p>
+          <div className="flex items-center gap-3">
+            <img src="/logo-ssa.jpg" alt="SSA Distribuidora" className="h-9 w-auto object-contain" />
+            <div className="border-l border-slate-200 pl-3">
+              <h1 className="text-base font-semibold text-slate-900 leading-tight">Governança administrativa</h1>
+              <p className="text-xs text-slate-500">Cadastros, parametrização e auditoria · SSA Distribuidora</p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <nav className="hidden items-center gap-3 md:flex">

@@ -66,10 +66,11 @@ export function LoginPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
-      <div className="w-full max-w-sm overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <header className="bg-brand-900 px-6 py-5">
-          <h1 className="text-lg font-semibold text-white">SSA Distribuidora</h1>
-          <p className="text-sm text-brand-100">Entre com suas credenciais corporativas</p>
+      <div className="w-full max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md">
+        <header className="flex flex-col items-center border-b border-slate-100 bg-white px-6 pt-7 pb-5 text-center">
+          <img src="/logo-ssa.jpg" alt="SSA Distribuidora" className="h-16 w-auto object-contain" />
+          <h1 className="mt-3 text-base font-bold text-slate-800">Portal de Gestão</h1>
+          <p className="mt-0.5 text-xs text-slate-500">Entre com suas credenciais corporativas</p>
         </header>
 
         <form onSubmit={enviar} noValidate className="space-y-4 p-6">

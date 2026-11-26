@@ -12,8 +12,10 @@ function Sidebar({ aoNavegar }: { aoNavegar?: () => void }) {
   return (
     <nav aria-label="Principal" className="flex h-full flex-col bg-brand-900 p-4">
       <div className="mb-6 border-b border-white/20 pb-4">
-        <p className="text-lg font-bold text-white">SSA Distribuidora</p>
-        <p className="text-xs text-brand-100">Inteligência gerencial e operacional</p>
+        <div className="flex items-center justify-center rounded-lg bg-white p-2.5 shadow-sm mb-3">
+          <img src="/logo-ssa.jpg" alt="SSA Distribuidora" className="h-10 w-auto object-contain" />
+        </div>
+        <p className="text-xs text-brand-100 text-center font-medium">Inteligência gerencial e operacional</p>
       </div>
       <ul className="space-y-1">
         {itens.map((i) => (
@@ -61,6 +63,9 @@ export function AppShell() {
         >
           <Menu size={18} />
         </button>
+        <div className="flex items-center gap-2 lg:hidden">
+          <img src="/logo-ssa.jpg" alt="SSA Distribuidora" className="h-7 w-auto object-contain" />
+        </div>
         <p className="hidden text-sm font-semibold text-slate-700 sm:block">SSA Distribuidora · Plataforma de gestão</p>
         <div className="ml-auto flex items-center gap-3">
           <div className="text-right leading-tight">

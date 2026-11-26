@@ -7,12 +7,15 @@ import { UsuariosTab } from '../pages/admin/UsuariosTab';
 import { MaquinasTab } from '../pages/admin/MaquinasTab';
 import { TurnosMetasTab } from '../pages/admin/TurnosMetasTab';
 import { AuditoriaTab } from '../pages/admin/AuditoriaTab';
+import { OperatorTerminal } from '../pages/operator/OperatorTerminal';
 
 function Home() {
   const { usuario, carregando } = useAuth();
   if (carregando) return null;
   if (!usuario) return <Navigate to="/login" replace />;
-  // Somente a Tela 05 existe nesta branch; os demais perfis caem no guard da própria rota.
+  if (String(usuario.perfil).toUpperCase() === 'OPERADOR') {
+    return <Navigate to="/operador" replace />;
+  }
   return <Navigate to="/admin" replace />;
 }
 
@@ -27,6 +30,7 @@ export function AppRoutes() {
         <Route path="turnos-metas" element={<TurnosMetasTab />} />
         <Route path="auditoria" element={<AuditoriaTab />} />
       </Route>
+      <Route path="/operador" element={<RequireRole roles={['OPERADOR']}><OperatorTerminal /></RequireRole>} />
       <Route path="/" element={<Home />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

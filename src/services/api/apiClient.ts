@@ -9,6 +9,7 @@ export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   message?: string;
+  meta?: any;
   pagination?: { pagina: number; limite: number; total: number; total_paginas: number };
   error?: {
     code: string;

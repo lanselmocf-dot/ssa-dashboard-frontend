@@ -1,17 +1,22 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useErpResource } from '../../hooks/useErpResource';
-import { ErpApi, type ErpFiltros } from '../../services/api/erpApi';
+import { useAutoRefresh } from '../../hooks/useAutoRefresh';
+import { ErpApi } from '../../services/api/erpApi';
 import { Badge, EmptyState, ErrorState } from '../../components/ui/Feedback';
-import { formatarDataHora, formatarMoeda, formatarNumero, hojeISO, somarDiasISO } from '../../utils/format';
+import { formatarDataHora, formatarDataISO, formatarMoeda, formatarNumero, hojeISO, somarDiasISO } from '../../utils/format';
 import type { EstoqueCritico, Faturamento, Vendas } from '../../types/api';
 
-const PERIODOS = [
+/**
+ * As rotas do ERP trabalham com UMA data de referência (?data=YYYY-MM-DD):
+ * faturamento e pedidos devolvem o dia e o acumulado do mês até essa data.
+ * Por isso o filtro é "data de referência", e não um intervalo livre.
+ */
+const REFERENCIAS = [
   { valor: 'hoje', rotulo: 'Hoje' },
-  { valor: '7d', rotulo: 'Últimos 7 dias' },
-  { valor: '30d', rotulo: 'Últimos 30 dias' },
-  { valor: 'mes', rotulo: 'Mês atual' }
+  { valor: 'ontem', rotulo: 'Ontem' },
+  { valor: 'data', rotulo: 'Escolher data…' }
 ] as const;
-type Periodo = (typeof PERIODOS)[number]['valor'];
+type Referencia = (typeof REFERENCIAS)[number]['valor'];
 
 const FILIAIS = [
   { valor: '', rotulo: 'Todas as filiais' },
@@ -19,18 +24,10 @@ const FILIAIS = [
   { valor: '2', rotulo: 'Filial 02 — Distribuição' }
 ];
 
-function intervalo(p: Periodo): { data_inicio: string; data_fim: string } {
-  const hoje = hojeISO();
-  const inicio =
-    p === 'hoje'
-      ? hoje
-      : p === '7d'
-      ? somarDiasISO(hoje, -6)
-      : p === '30d'
-      ? somarDiasISO(hoje, -29)
-      : `${hoje.slice(0, 8)}01`;
-  return { data_inicio: inicio, data_fim: hoje };
-}
+/** Intervalo da atualização automática dos indicadores. */
+const ATUALIZAR_A_CADA_MS = 60_000;
+/** Máximo aceito pelo backend em ?limite= (estoque crítico). */
+const LIMITE_ESTOQUE = 100;
 
 function extrairFaturamentoDiario(fat: Faturamento | null | undefined): number {
   if (!fat?.diario) return 0;
@@ -61,6 +58,11 @@ function extrairPedidosEmitidos(ven: Vendas | null | undefined): number {
   return Number(ven.emitidos) || 0;
 }
 
+function extrairPedidosEmitidosDia(ven: Vendas | null | undefined): number | null {
+  if (ven?.pedidos_emitidos?.diario) return Number(ven.pedidos_emitidos.diario.quantidade) || 0;
+  return null;
+}
+
 function extrairValorPedidosEmitidos(ven: Vendas | null | undefined): number | null {
   if (ven?.pedidos_emitidos?.mensal) return Number(ven.pedidos_emitidos.mensal.valor_total) || 0;
   return null;
@@ -86,6 +88,16 @@ function severidade(i: EstoqueCritico): 'critico' | 'alerta' {
   const saldo = extrairSaldoEstoque(i);
   return saldo <= Number(i.ponto_reposicao) * 0.5 ? 'critico' : 'alerta';
 }
+
+/** Número finito ou null (não inventa valor quando o campo não vem do ERP). */
+function numeroOuNull(v: unknown): number | null {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+const horaCurta = (ms: number) =>
+  new Date(ms).toLocaleTimeString('pt-BR', { timeZone: 'America/Maceio', hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
 function Painel({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
@@ -130,48 +142,76 @@ function Kpi({
 
 /** Tela 02 — Dashboard gerencial (visão Gestor / Diretoria). */
 export function DashboardGerencial() {
-  const [periodo, setPeriodo] = useState<Periodo>('mes');
+  const hoje = hojeISO();
+  const [referencia, setReferencia] = useState<Referencia>('hoje');
+  const [dataEscolhida, setDataEscolhida] = useState(hoje);
   const [filial, setFilial] = useState('');
 
-  const filtros = useMemo<ErpFiltros>(
-    () => ({ ...intervalo(periodo), filial: filial || undefined, data_referencia: intervalo(periodo).data_fim }),
-    [periodo, filial]
+  const dataRef =
+    referencia === 'hoje' ? hoje
+      : referencia === 'ontem' ? somarDiasISO(hoje, -1)
+      : dataEscolhida && dataEscolhida <= hoje ? dataEscolhida : hoje;
+  const inicioMes = `${dataRef.slice(0, 8)}01`;
+
+  // Faturamento e pedidos só aceitam ?data= no backend (sem filial): a chave não inclui a filial.
+  const fat = useErpResource(`fat|${dataRef}`, () => ErpApi.faturamento({ data_referencia: dataRef }));
+  const ven = useErpResource(`ven|${dataRef}`, () => ErpApi.vendas({ data_referencia: dataRef }));
+  // Estoque é a posição atual (não usa data); pede o máximo aceito para não esconder itens críticos.
+  const est = useErpResource(`est|${filial}|${LIMITE_ESTOQUE}`, () =>
+    ErpApi.estoqueCritico({ filial: filial || undefined, limite: LIMITE_ESTOQUE })
   );
-  const chave = `${filtros.data_inicio}|${filtros.data_fim}|${filtros.filial ?? ''}`;
+  const top = useErpResource(`top|${dataRef}|${filial}`, () =>
+    ErpApi.topProdutos({ data_referencia: dataRef, filial: filial || undefined })
+  );
 
-  const fat = useErpResource(`fat|${chave}`, () => ErpApi.faturamento(filtros));
-  const ven = useErpResource(`ven|${chave}`, () => ErpApi.vendas(filtros));
-  const est = useErpResource(`est|${chave}`, () => ErpApi.estoqueCritico(filtros));
-  const top = useErpResource(`top|${chave}`, () => ErpApi.topProdutos(filtros));
+  const recursos = [fat, ven, est, top];
 
-  const contingencia = [fat, ven, est, top].filter((r) => r.emContingencia);
+  // "Dados atualizados": recarrega sozinho a cada minuto (pausa com a aba em segundo plano).
+  // Datas passadas não mudam; o estoque é posição atual e sempre atualiza.
+  const atualizarTudo = () => { fat.reload(); ven.reload(); est.reload(); top.reload(); };
+  useAutoRefresh(() => {
+    est.reload();
+    if (dataRef === hoje) { fat.reload(); ven.reload(); top.reload(); }
+  }, ATUALIZAR_A_CADA_MS);
+
+  const contingencia = recursos.filter((r) => r.emContingencia);
   const salvoEm = contingencia.length
     ? Math.min(...contingencia.map((r) => r.salvoEm ?? Date.now()))
     : null;
+  const atualizadoEm = recursos.some((r) => r.salvoEm !== null && !r.emContingencia)
+    ? Math.max(...recursos.filter((r) => !r.emContingencia).map((r) => r.salvoEm ?? 0))
+    : null;
+  const atualizando = recursos.some((r) => r.carregando && r.dados);
 
   const estoque = useMemo(
     () => [...(est.dados ?? [])].sort((a, b) => Number(severidade(b) === 'critico') - Number(severidade(a) === 'critico')),
     [est.dados]
   );
+  const totalCriticos = estoque.filter((i) => severidade(i) === 'critico').length;
 
-  // Curva ABC: itens mais vendidos ordenados por faturamento ou volume
+  // Curva ABC: ordena pelo faturamento real do ERP; sem faturamento, ordena por volume e não exibe R$.
   const abc = useMemo(() => {
-    const itens = [...(top.dados ?? [])].map((i) => {
-      const valor = Number(i.total_faturado ?? i.receita ?? (Number(i.quantidade_expedida ?? i.quantidade ?? 0) * 100));
-      const qtd = Number(i.quantidade_expedida ?? i.quantidade ?? 0);
-      return { ...i, valor, qtd };
-    }).sort((a, b) => b.valor - a.valor);
+    const itens = [...(top.dados ?? [])].map((i) => ({
+      ...i,
+      valor: numeroOuNull(i.total_faturado ?? i.receita),
+      qtd: Number(i.quantidade_expedida ?? i.quantidade ?? 0) || 0
+    }));
+    const porValor = itens.some((i) => i.valor !== null);
+    const medida = (i: (typeof itens)[number]) => (porValor ? i.valor ?? 0 : i.qtd);
+    itens.sort((a, b) => medida(b) - medida(a));
 
-    const total = itens.reduce((s, i) => s + i.valor, 0) || 1;
+    const total = itens.reduce((s, i) => s + medida(i), 0) || 1;
     let acc = 0;
     return itens.map((i) => {
-      acc += i.valor;
-      const pct = (acc / total) * 100;
-      const classe = (i.classe_abc || i.classe || (pct <= 80 ? 'A' : pct <= 95 ? 'B' : 'C')) as 'A' | 'B' | 'C';
-      return { ...i, classe };
+      // Mesmo corte do backend: o item que cruza a faixa fecha a classe anterior.
+      const pctAntes = (acc / total) * 100;
+      acc += medida(i);
+      const classe = (i.classe_abc || i.classe || (pctAntes < 80 ? 'A' : pctAntes < 95 ? 'B' : 'C')) as 'A' | 'B' | 'C';
+      return { ...i, classe, medida: medida(i) };
     });
   }, [top.dados]);
-  const maior = abc[0]?.valor || 1;
+  const maior = abc[0]?.medida || 1;
+  const abcPorVolume = abc.length > 0 && abc.every((i) => i.valor === null);
 
   const kpiErro = fat.erro ?? ven.erro;
   const selectCls = 'input mt-1 w-auto';
@@ -182,8 +222,12 @@ export function DashboardGerencial() {
   const notasMes = extrairNotasMensal(fat.dados);
 
   const pedidosEmitidos = extrairPedidosEmitidos(ven.dados);
+  const pedidosDia = extrairPedidosEmitidosDia(ven.dados);
   const valorEmitidos = extrairValorPedidosEmitidos(ven.dados);
   const pedidosPendentes = extrairPedidosPendentes(ven.dados);
+
+  const diaTxt = formatarDataISO(dataRef).slice(0, 5);
+  const mesTxt = `${formatarDataISO(inicioMes).slice(0, 5)} a ${diaTxt}`;
 
   return (
     <div className="space-y-5">
@@ -192,12 +236,23 @@ export function DashboardGerencial() {
           <h1 className="text-xl font-semibold text-slate-900">Visão executiva</h1>
           <p className="text-xs text-slate-500">Inteligência de negócios integrada ao ERP Winthor</p>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <label className="text-sm font-medium text-slate-700">Período
-            <select className={selectCls} value={periodo} onChange={(e) => setPeriodo(e.target.value as Periodo)}>
-              {PERIODOS.map((p) => <option key={p.valor} value={p.valor}>{p.rotulo}</option>)}
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="text-sm font-medium text-slate-700">Data de referência
+            <select className={selectCls} value={referencia} onChange={(e) => setReferencia(e.target.value as Referencia)}>
+              {REFERENCIAS.map((r) => <option key={r.valor} value={r.valor}>{r.rotulo}</option>)}
             </select>
           </label>
+          {referencia === 'data' && (
+            <label className="text-sm font-medium text-slate-700">Dia
+              <input
+                type="date"
+                className={selectCls}
+                value={dataEscolhida}
+                max={hoje}
+                onChange={(e) => setDataEscolhida(e.target.value)}
+              />
+            </label>
+          )}
           <label className="text-sm font-medium text-slate-700">Filial
             <select className={selectCls} value={filial} onChange={(e) => setFilial(e.target.value)}>
               {FILIAIS.map((f) => <option key={f.valor} value={f.valor}>{f.rotulo}</option>)}
@@ -206,7 +261,21 @@ export function DashboardGerencial() {
         </div>
       </div>
 
-      {/* RN-12: alerta discreto de contingência (HTTP 503 do ERP) */}
+      {/* Dados atualizados: hora da última leitura do ERP + atualização automática */}
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500" aria-live="polite">
+        <span>
+          {atualizando
+            ? 'Atualizando indicadores…'
+            : atualizadoEm
+            ? `Atualizado às ${horaCurta(atualizadoEm)} · atualiza sozinho a cada minuto`
+            : ''}
+        </span>
+        <button className="font-semibold text-slate-700 underline disabled:opacity-50" disabled={atualizando} onClick={atualizarTudo}>
+          Atualizar agora
+        </button>
+      </div>
+
+      {/* RN-12: alerta discreto de contingência (HTTP 503 do ERP ou snapshot do backend) */}
       {salvoEm !== null && (
         <div role="status" className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
           <span aria-hidden className="h-2 w-2 rounded-full bg-amber-500" />
@@ -216,7 +285,7 @@ export function DashboardGerencial() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi
-          rotulo="Faturamento do dia"
+          rotulo={`Faturamento do dia (${diaTxt})`}
           valor={formatarMoeda(faturamentoDiario)}
           apoio={notasDia !== null ? `${formatarNumero(notasDia)} notas fiscais` : undefined}
           carregando={fat.carregando && !fat.dados}
@@ -225,14 +294,17 @@ export function DashboardGerencial() {
         <Kpi
           rotulo="Faturamento do mês"
           valor={formatarMoeda(faturamentoMensal)}
-          apoio={notasMes !== null ? `${formatarNumero(notasMes)} notas fiscais` : undefined}
+          apoio={`Acumulado de ${mesTxt}${notasMes !== null ? ` · ${formatarNumero(notasMes)} notas` : ''}`}
           carregando={fat.carregando && !fat.dados}
           erro={fat.erro}
         />
         <Kpi
-          rotulo="Pedidos emitidos"
+          rotulo="Pedidos emitidos no mês"
           valor={formatarNumero(pedidosEmitidos)}
-          apoio={valorEmitidos !== null ? `Total: ${formatarMoeda(valorEmitidos)}` : undefined}
+          apoio={[
+            pedidosDia !== null ? `${formatarNumero(pedidosDia)} no dia` : null,
+            valorEmitidos !== null ? `Total: ${formatarMoeda(valorEmitidos)}` : null
+          ].filter(Boolean).join(' · ') || undefined}
           carregando={ven.carregando && !ven.dados}
           erro={ven.erro}
         />
@@ -241,9 +313,15 @@ export function DashboardGerencial() {
           valor={formatarNumero(pedidosPendentes)}
           carregando={ven.carregando && !ven.dados}
           erro={ven.erro}
-          apoio={pedidosEmitidos ? `${Math.round((pedidosPendentes / pedidosEmitidos) * 100)}% dos emitidos` : undefined}
+          apoio={`Posição atual${pedidosEmitidos ? ` · ${Math.round((pedidosPendentes / pedidosEmitidos) * 100)}% dos emitidos no mês` : ''}`}
         />
       </div>
+      {filial && (
+        <p className="text-xs text-slate-500">
+          Faturamento e pedidos mostram o total de todas as filiais: o ERP ainda não separa esses números por filial.
+          Estoque crítico e Curva ABC já estão filtrados pela filial escolhida.
+        </p>
+      )}
       {kpiErro && (
         <div role="alert" className="flex items-center justify-between gap-3 rounded-md border-l-4 border-red-600 bg-red-50 px-3 py-2 text-sm text-red-800">
           <span>{kpiErro}</span>
@@ -259,6 +337,11 @@ export function DashboardGerencial() {
               : estoque.length === 0 ? <EmptyState titulo="Nenhum produto abaixo do ponto de reposição" />
               : (
                 <div className="overflow-x-auto">
+                  <p className="mb-2 text-xs text-slate-600">
+                    {formatarNumero(estoque.length)} {estoque.length === 1 ? 'produto' : 'produtos'} abaixo do ponto de reposição
+                    {totalCriticos ? ` · ${formatarNumero(totalCriticos)} sem estoque` : ''}
+                    {estoque.length >= LIMITE_ESTOQUE ? ` · mostrando os ${LIMITE_ESTOQUE} mais urgentes` : ''}
+                  </p>
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-slate-200">
@@ -273,10 +356,14 @@ export function DashboardGerencial() {
                         const sev = severidade(i);
                         const cod = i.codigo_produto || i.codigo;
                         return (
-                          <tr key={cod || `${i.produto}-${idx}`}>
+                          <tr key={`${cod || i.produto}-${i.filial ?? ''}-${idx}`}>
                             <td className="td font-medium text-slate-900">
                               <div>{i.produto}</div>
-                              {cod && <div className="text-xs text-slate-400 font-mono">{cod}</div>}
+                              {(cod || (!filial && i.filial)) && (
+                                <div className="text-xs text-slate-400 font-mono">
+                                  {cod}{!filial && i.filial ? `${cod ? ' · ' : ''}Filial ${String(i.filial).padStart(2, '0')}` : ''}
+                                </div>
+                              )}
                             </td>
                             <td className="td text-right tabular-nums">{formatarNumero(extrairSaldoEstoque(i))}</td>
                             <td className="td text-right tabular-nums">{formatarNumero(i.ponto_reposicao)}</td>
@@ -301,28 +388,33 @@ export function DashboardGerencial() {
               : top.erro ? <ErrorState mensagem={top.erro} onRetry={top.reload} />
               : abc.length === 0 ? <EmptyState titulo="Sem dados de vendas para o período" />
               : (
-                <ol className="space-y-3">
-                  {abc.map((i, idx) => {
-                    const largura = Math.max(8, Math.round((i.valor / maior) * 100));
-                    const tom = i.classe === 'A' ? 'bg-emerald-600' : i.classe === 'B' ? 'bg-blue-600' : 'bg-slate-400';
-                    const badgeTom = i.classe === 'A' ? 'verde' : i.classe === 'B' ? 'azul' : 'cinza';
-                    return (
-                      <li key={i.codigo_produto || `${i.produto}-${idx}`} className="space-y-1">
-                        <div className="flex items-center justify-between text-xs font-medium text-slate-700">
-                          <span className="truncate max-w-[200px]" title={i.produto}>{i.produto}</span>
-                          <span className="flex items-center gap-1.5 tabular-nums">
-                            {i.valor > 0 && <span className="text-slate-900 font-semibold">{formatarMoeda(i.valor)}</span>}
-                            {i.qtd > 0 && <span className="text-slate-500">({formatarNumero(i.qtd)} un)</span>}
-                            <Badge tom={badgeTom}>{i.classe}</Badge>
-                          </span>
-                        </div>
-                        <div className="h-2 overflow-hidden rounded bg-slate-100" aria-hidden>
-                          <div className={`h-full ${tom}`} style={{ width: `${largura}%` }} />
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ol>
+                <>
+                  {abcPorVolume && (
+                    <p className="mb-3 text-xs text-slate-500">Ranking por volume expedido: o ERP não informou o faturamento destes itens.</p>
+                  )}
+                  <ol className="space-y-3">
+                    {abc.map((i, idx) => {
+                      const largura = Math.max(8, Math.round((i.medida / maior) * 100));
+                      const tom = i.classe === 'A' ? 'bg-emerald-600' : i.classe === 'B' ? 'bg-blue-600' : 'bg-slate-400';
+                      const badgeTom = i.classe === 'A' ? 'verde' : i.classe === 'B' ? 'azul' : 'cinza';
+                      return (
+                        <li key={i.codigo_produto || `${i.produto}-${idx}`} className="space-y-1">
+                          <div className="flex items-center justify-between text-xs font-medium text-slate-700">
+                            <span className="truncate max-w-[200px]" title={i.produto}>{i.produto}</span>
+                            <span className="flex items-center gap-1.5 tabular-nums">
+                              {i.valor !== null && <span className="text-slate-900 font-semibold">{formatarMoeda(i.valor)}</span>}
+                              {i.qtd > 0 && <span className="text-slate-500">({formatarNumero(i.qtd)} un)</span>}
+                              <Badge tom={badgeTom}>{i.classe}</Badge>
+                            </span>
+                          </div>
+                          <div className="h-2 overflow-hidden rounded bg-slate-100" aria-hidden>
+                            <div className={`h-full ${tom}`} style={{ width: `${largura}%` }} />
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </>
               )}
           </Painel>
         </div>

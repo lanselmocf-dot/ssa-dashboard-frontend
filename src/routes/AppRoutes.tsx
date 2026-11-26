@@ -15,10 +15,11 @@ function Home() {
   const { usuario, carregando } = useAuth();
   if (carregando) return null;
   if (!usuario) return <Navigate to="/login" replace />;
-  if (String(usuario.perfil).toUpperCase() === 'OPERADOR') {
+  const perfil = String(usuario.perfil).toUpperCase();
+  if (perfil === 'OPERADOR') {
     return <Navigate to="/operador" replace />;
   }
-  if (String(usuario.perfil).toUpperCase() === 'SUPERVISOR') {
+  if (perfil === 'SUPERVISOR' || perfil === 'GESTOR') {
     return <Navigate to="/supervisor" replace />;
   }
   return <Navigate to="/admin" replace />;
@@ -35,8 +36,8 @@ export function AppRoutes() {
         <Route path="turnos-metas" element={<TurnosMetasTab />} />
         <Route path="auditoria" element={<AuditoriaTab />} />
       </Route>
-      {/* Tela 03 — Monitoramento fabril (visão supervisor) */}
-      <Route path="/supervisor" element={<RequireRole roles={['SUPERVISOR', 'ADMIN']}><SupervisorLayout /></RequireRole>}>
+      {/* Tela 03 — Monitoramento fabril (visão supervisor e gestor) */}
+      <Route path="/supervisor" element={<RequireRole roles={['SUPERVISOR', 'ADMIN', 'GESTOR']}><SupervisorLayout /></RequireRole>}>
         <Route index element={<MonitoramentoFabril />} />
       </Route>
       <Route path="/operador" element={<RequireRole roles={['OPERADOR', 'ADMIN']}><OperatorTerminal /></RequireRole>} />

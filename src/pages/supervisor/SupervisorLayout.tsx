@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/Button';
 
@@ -14,6 +14,11 @@ export function SupervisorLayout() {
             <p className="text-xs text-slate-500">Visão do supervisor · OEE e parque de máquinas · SSA Distribuidora</p>
           </div>
           <div className="flex items-center gap-3">
+            {String(usuario?.perfil).toUpperCase() === 'ADMIN' && (
+              <Link to="/admin" className="text-xs font-medium text-brand-700 hover:underline">
+                Painel Admin →
+              </Link>
+            )}
             <div className="hidden text-right sm:block">
               <p className="text-sm font-medium text-slate-800">{usuario?.nome}</p>
               <p className="text-xs text-slate-500">{usuario?.perfil}</p>

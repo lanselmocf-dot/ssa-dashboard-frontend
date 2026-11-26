@@ -1,16 +1,14 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
   CheckCircle2,
   CircleStop,
   Clock3,
   Factory,
-  LogOut,
   PackageCheck,
   RefreshCw
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { TopHeader } from '../../components/layout/TopHeader';
 import { Button } from '../../components/ui/Button';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { Field } from '../../components/ui/Field';
@@ -51,7 +49,6 @@ function formatarQuantidade(valor: number): string {
 }
 
 export function OperatorTerminal() {
-  const { usuario, logout } = useAuth();
   const toast = useToast();
   const [maquinas, setMaquinas] = useState<Maquina[]>([]);
   const [turnos, setTurnos] = useState<Turno[]>([]);
@@ -409,60 +406,10 @@ export function OperatorTerminal() {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
-      <header className="border-b border-brand-800 bg-brand-900 text-white shadow-md">
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center rounded-xl bg-white p-2 shadow-sm">
-              <img src="/logo-ssa.jpg" alt="SSA Distribuidora" className="h-10 w-auto object-contain" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white sm:text-2xl leading-tight">Terminal do operador</h1>
-              <p className="hidden text-xs text-brand-100 sm:block">Chão de fábrica · envase e embalagem</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {['ADMIN', 'SUPERVISOR', 'GESTOR'].includes(String(usuario?.perfil).toUpperCase()) && (
-              <div className="hidden items-center gap-2 md:flex">
-                {String(usuario?.perfil).toUpperCase() === 'ADMIN' && (
-                  <Link
-                    to="/admin"
-                    className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-brand-100 hover:bg-white/20 hover:text-white transition-colors"
-                  >
-                    Admin
-                  </Link>
-                )}
-                <Link
-                  to="/supervisor"
-                  className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-brand-100 hover:bg-white/20 hover:text-white transition-colors"
-                >
-                  Supervisão
-                </Link>
-                {['ADMIN', 'GESTOR'].includes(String(usuario?.perfil).toUpperCase()) && (
-                  <Link
-                    to="/gestor"
-                    className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-brand-100 hover:bg-white/20 hover:text-white transition-colors"
-                  >
-                    Gestão
-                  </Link>
-                )}
-              </div>
-            )}
-            <div className="hidden text-right sm:block leading-tight">
-              <p className="text-sm font-semibold text-white">{usuario?.nome}</p>
-              <p className="text-xs uppercase tracking-wide text-brand-200">{usuario?.perfil}</p>
-            </div>
-            <button
-              type="button"
-              onClick={logout}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 px-3.5 py-2 text-xs font-medium text-white hover:bg-white/20 transition-colors"
-              aria-label="Sair da conta"
-            >
-              <LogOut size={16} aria-hidden />
-              <span className="hidden sm:inline">Sair</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      <TopHeader
+        titulo="Terminal do operador"
+        subtitulo="Chão de fábrica · envase e embalagem"
+      />
 
       <main className="mx-auto max-w-[1500px] space-y-5 px-4 py-5 sm:px-6 sm:py-7">
         {erroCatalogos && (

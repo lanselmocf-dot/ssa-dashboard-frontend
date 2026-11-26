@@ -1,6 +1,5 @@
-import { Link, NavLink, Outlet } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { Button } from '../../components/ui/Button';
+import { NavLink, Outlet } from 'react-router-dom';
+import { TopHeader } from '../../components/layout/TopHeader';
 
 const abas = [
   { to: 'usuarios', rotulo: 'Colaboradores e acessos' },
@@ -10,50 +9,24 @@ const abas = [
 ];
 
 export function AdminLayout() {
-  const { usuario, logout } = useAuth();
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
-          <div className="flex items-center gap-3">
-            <img src="/logo-ssa.jpg" alt="SSA Distribuidora" className="h-9 w-auto object-contain" />
-            <div className="border-l border-slate-200 pl-3">
-              <h1 className="text-base font-semibold text-slate-900 leading-tight">Governança administrativa</h1>
-              <p className="text-xs text-slate-500">Cadastros, parametrização e auditoria · SSA Distribuidora</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <nav className="hidden items-center gap-3 md:flex">
-              <Link to="/gestor" className="text-xs font-medium text-slate-600 hover:text-brand-700 hover:underline">
-                Visão executiva
-              </Link>
-              <span className="text-slate-300">·</span>
-              <Link to="/supervisor" className="text-xs font-medium text-brand-700 hover:underline">
-                Monitoramento Fabril
-              </Link>
-              <span className="text-slate-300">·</span>
-              <Link to="/operador" className="text-xs font-medium text-slate-600 hover:text-brand-700 hover:underline">
-                Terminal Operador
-              </Link>
-            </nav>
-            <div className="hidden text-right sm:block">
-              <p className="text-sm font-medium text-slate-800">{usuario?.nome}</p>
-              <p className="text-xs text-slate-500">{usuario?.perfil}</p>
-            </div>
-            <Button variant="secondary" size="sm" onClick={logout}>Sair</Button>
-          </div>
-        </div>
-        <nav aria-label="Seções administrativas" className="mx-auto max-w-7xl overflow-x-auto px-4">
-          <ul className="flex gap-1">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <TopHeader
+        titulo="Governança administrativa"
+        subtitulo="Cadastros, parametrização e auditoria · SSA Distribuidora"
+      />
+      <div className="border-b border-slate-200 bg-white shadow-sm">
+        <nav aria-label="Seções administrativas" className="mx-auto max-w-[1500px] overflow-x-auto px-4 sm:px-6">
+          <ul className="flex gap-2 py-2">
             {abas.map((a) => (
               <li key={a.to}>
                 <NavLink
                   to={a.to}
                   className={({ isActive }) =>
-                    `block whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium ${
+                    `block rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors ${
                       isActive
-                        ? 'border-brand-700 text-brand-800'
-                        : 'border-transparent text-slate-500 hover:text-slate-800'
+                        ? 'bg-brand-900 text-white shadow-sm'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                     }`
                   }
                 >
@@ -63,8 +36,8 @@ export function AdminLayout() {
             ))}
           </ul>
         </nav>
-      </header>
-      <main className="mx-auto max-w-7xl px-4 py-6"><Outlet /></main>
+      </div>
+      <main className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6"><Outlet /></main>
     </div>
   );
 }

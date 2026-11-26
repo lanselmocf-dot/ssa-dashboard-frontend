@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -421,9 +422,35 @@ export function OperatorTerminal() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {['ADMIN', 'SUPERVISOR', 'GESTOR'].includes(String(usuario?.perfil).toUpperCase()) && (
+              <div className="hidden items-center gap-2 md:flex">
+                {String(usuario?.perfil).toUpperCase() === 'ADMIN' && (
+                  <Link
+                    to="/admin"
+                    className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800"
+                  >
+                    Admin
+                  </Link>
+                )}
+                <Link
+                  to="/supervisor"
+                  className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800"
+                >
+                  Supervisão
+                </Link>
+                {['ADMIN', 'GESTOR'].includes(String(usuario?.perfil).toUpperCase()) && (
+                  <Link
+                    to="/gestor"
+                    className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800"
+                  >
+                    Gestão
+                  </Link>
+                )}
+              </div>
+            )}
             <div className="hidden text-right sm:block">
               <p className="font-semibold">{usuario?.nome}</p>
-              <p className="text-xs uppercase tracking-wide text-slate-300">Operador</p>
+              <p className="text-xs uppercase tracking-wide text-slate-300">{usuario?.perfil}</p>
             </div>
             <Button
               variant="secondary"

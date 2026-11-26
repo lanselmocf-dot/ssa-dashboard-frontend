@@ -82,29 +82,60 @@ export interface Paginacao {
 
 /* ──────────────────── Tipos da Tela 02 (Dashboard Gerencial / ERP) ──────────────────── */
 
+export interface PeriodoFaturamento {
+  total_faturado: number;
+  quantidade_notas: number;
+}
+
 export interface Faturamento {
-  diario: number;
-  mensal: number;
+  data_referencia?: string;
+  mes_referencia?: string;
+  diario: number | PeriodoFaturamento;
+  mensal: number | PeriodoFaturamento;
+}
+
+export interface PeriodoVendas {
+  quantidade: number;
+  valor_total: number;
 }
 
 export interface Vendas {
-  emitidos: number;
-  pendentes: number;
+  data_referencia?: string;
+  mes_referencia?: string;
+  emitidos?: number;
+  pendentes?: number;
+  pedidos_emitidos?: {
+    diario: PeriodoVendas;
+    mensal: PeriodoVendas;
+  };
+  pedidos_pendentes?: number | PeriodoVendas;
 }
 
 export interface EstoqueCritico {
   codigo?: string;
+  codigo_produto?: string;
   produto: string;
-  estoque_atual: number;
+  categoria?: string;
+  filial?: string;
+  saldo?: number;
+  estoque_atual?: number;
   ponto_reposicao: number;
   severidade?: string;
 }
 
 export interface TopProduto {
+  codigo?: string;
+  codigo_produto?: string;
   produto: string;
-  quantidade: number;
+  categoria?: string;
+  quantidade?: number;
+  quantidade_expedida?: number;
   receita?: number;
+  total_faturado?: number;
+  posicao?: number;
   classe?: string;
+  classe_abc?: string;
+  percentual_acumulado?: number;
 }
 
 /* ──────────────────── Tipos do Terminal do Operador (Tela 04) ──────────────────── */

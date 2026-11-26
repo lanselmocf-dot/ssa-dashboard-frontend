@@ -22,7 +22,7 @@ export function RequireRole({ roles, children }: Props) {
       <main className="mx-auto mt-24 max-w-md rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
         <h1 className="text-lg font-semibold text-slate-900">Acesso restrito</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Seu perfil (<strong>{usuario.perfil}</strong>) não tem uma tela inicial configurada. Procure um administrador.
+          Seu perfil (<strong>{usuario.perfil}</strong>) não tem permissão para acessar esta página. Procure um administrador.
         </p>
         <button onClick={logout} className="mt-5 text-sm font-medium text-brand-700 underline">Sair e entrar com outra conta</button>
       </main>

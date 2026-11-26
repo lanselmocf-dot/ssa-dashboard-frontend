@@ -4,13 +4,15 @@ import { RequireRole } from './RequireRole';
 import { rotaInicial } from './rbac';
 import { AppShell } from '../components/layout/AppShell';
 import { LoginPage } from '../pages/login/LoginPage';
-import { PlaceholderPage } from '../pages/PlaceholderPage';
 import { DashboardGerencial } from '../pages/dashboard/DashboardGerencial';
 import { AdminLayout } from '../pages/admin/AdminLayout';
 import { UsuariosTab } from '../pages/admin/UsuariosTab';
 import { MaquinasTab } from '../pages/admin/MaquinasTab';
 import { TurnosMetasTab } from '../pages/admin/TurnosMetasTab';
 import { AuditoriaTab } from '../pages/admin/AuditoriaTab';
+import { OperatorTerminal } from '../pages/operator/OperatorTerminal';
+import { SupervisorLayout } from '../pages/supervisor/SupervisorLayout';
+import { MonitoramentoFabril } from '../pages/supervisor/MonitoramentoFabril';
 import { Spinner } from '../components/ui/Feedback';
 
 /** "/" envia o usuário autenticado para a tela do seu perfil. */
@@ -26,16 +28,20 @@ export function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
 
-      <Route path="/gestor" element={<RequireRole roles={['GESTOR']}><AppShell /></RequireRole>}>
+      {/* Tela 02 — Dashboard do Gestor */}
+      <Route path="/gestor" element={<RequireRole roles={['GESTOR', 'ADMIN']}><AppShell /></RequireRole>}>
         <Route index element={<DashboardGerencial />} />
       </Route>
-      <Route path="/supervisor" element={<RequireRole roles={['SUPERVISOR']}><AppShell /></RequireRole>}>
-        <Route index element={<PlaceholderPage tela="03" titulo="Supervisão" />} />
-      </Route>
-      <Route path="/operador" element={<RequireRole roles={['OPERADOR']}><AppShell /></RequireRole>}>
-        <Route index element={<PlaceholderPage tela="04" titulo="Operação" />} />
+
+      {/* Tela 03 — Monitoramento fabril (visão supervisor e gestor) */}
+      <Route path="/supervisor" element={<RequireRole roles={['SUPERVISOR', 'ADMIN', 'GESTOR']}><SupervisorLayout /></RequireRole>}>
+        <Route index element={<MonitoramentoFabril />} />
       </Route>
 
+      {/* Tela 04 — Terminal do operador */}
+      <Route path="/operador" element={<RequireRole roles={['OPERADOR', 'ADMIN']}><OperatorTerminal /></RequireRole>} />
+
+      {/* Tela 05 — Painel administrativo */}
       <Route path="/admin" element={<RequireRole roles={['ADMIN']}><AdminLayout /></RequireRole>}>
         <Route index element={<Navigate to="usuarios" replace />} />
         <Route path="usuarios" element={<UsuariosTab />} />

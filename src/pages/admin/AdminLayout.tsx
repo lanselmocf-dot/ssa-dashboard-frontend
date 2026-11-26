@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/Button';
 
@@ -20,6 +20,9 @@ export function AdminLayout() {
             <p className="text-xs text-slate-500">Cadastros, parametrização e auditoria · SSA Distribuidora</p>
           </div>
           <div className="flex items-center gap-3">
+            <Link to="/supervisor" className="text-xs font-medium text-brand-700 hover:underline">
+              Monitoramento Fabril →
+            </Link>
             <div className="hidden text-right sm:block">
               <p className="text-sm font-medium text-slate-800">{usuario?.nome}</p>
               <p className="text-xs text-slate-500">{usuario?.perfil}</p>

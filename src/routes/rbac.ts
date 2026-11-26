@@ -7,9 +7,9 @@ export const HOME_POR_PERFIL: Record<string, string> = {
 };
 
 export const ITENS_NAV = [
-  { to: '/gestor', rotulo: 'Visão executiva', roles: ['GESTOR'] },
-  { to: '/supervisor', rotulo: 'Supervisão', roles: ['SUPERVISOR'] },
-  { to: '/operador', rotulo: 'Operação', roles: ['OPERADOR'] },
+  { to: '/gestor', rotulo: 'Visão executiva', roles: ['GESTOR', 'ADMIN'] },
+  { to: '/supervisor', rotulo: 'Supervisão', roles: ['SUPERVISOR', 'ADMIN', 'GESTOR'] },
+  { to: '/operador', rotulo: 'Operação', roles: ['OPERADOR', 'ADMIN'] },
   { to: '/admin', rotulo: 'Administração', roles: ['ADMIN'] }
 ];
 

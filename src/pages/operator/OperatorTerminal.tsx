@@ -144,14 +144,14 @@ export function OperatorTerminal() {
     setParadaAberta(null);
 
     void OperadorApi.listarParadasAbertas(maquinaId)
-      .then((resposta) => {
+      .then((resposta: ApiResponse<ParadaMaquina[]>) => {
         if (!ativo) return;
         if (!resposta.success || !Array.isArray(resposta.data)) {
           setParadaAberta(null);
           setErroParada(erroDeResposta(resposta, 'Paradas em aberto'));
           return;
         }
-        setParadaAberta(resposta.data.find((parada) => parada.encerrado_em === null) ?? null);
+        setParadaAberta(resposta.data.find((parada: ParadaMaquina) => parada.encerrado_em === null) ?? null);
       })
       .finally(() => {
         if (ativo) setCarregandoParada(false);

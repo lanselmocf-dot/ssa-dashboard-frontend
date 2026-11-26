@@ -30,7 +30,7 @@ export function AppRoutes() {
         <Route path="turnos-metas" element={<TurnosMetasTab />} />
         <Route path="auditoria" element={<AuditoriaTab />} />
       </Route>
-      <Route path="/operador" element={<RequireRole roles={['OPERADOR']}><OperatorTerminal /></RequireRole>} />
+      <Route path="/operador" element={<RequireRole roles={['OPERADOR', 'ADMIN']}><OperatorTerminal /></RequireRole>} />
       <Route path="/" element={<Home />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

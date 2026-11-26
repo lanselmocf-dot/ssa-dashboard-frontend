@@ -79,3 +79,58 @@ export interface Paginacao {
   total: number;
   total_paginas: number;
 }
+
+/* ──────────────────── Tipos do Terminal do Operador (Tela 04) ──────────────────── */
+
+export type SeveridadeOcorrencia = 'Baixa' | 'Media' | 'Alta' | 'Critica';
+
+export interface MotivoParada {
+  id: string;
+  descricao: string;
+  categoria: string;
+}
+
+export interface TipoOcorrencia {
+  id: string;
+  nome: string;
+  descricao?: string | null;
+}
+
+export interface ParadaMaquina {
+  id: string;
+  maquina_id: string;
+  motivo_parada_id: string;
+  iniciado_em: string;
+  encerrado_em?: string | null;
+  duracao_segundos?: number | null;
+  observacao?: string | null;
+  observacoes?: string | null;
+  maquina_nome?: string;
+  motivo_nome?: string;
+  operador_nome?: string | null;
+  maquina_situacao?: string;
+  existe_outra_parada_aberta?: boolean;
+}
+
+export interface RegistroProducaoPayload {
+  maquina_id: string;
+  turno_id: string;
+  referencia_produto: string;
+  quantidade_produzida: number;
+  quantidade_rejeitada: number;
+  observacoes?: string;
+}
+
+export interface AbrirParadaPayload {
+  maquina_id: string;
+  motivo_parada_id: string;
+  observacao?: string;
+}
+
+export interface CriarOcorrenciaPayload {
+  maquina_id: string;
+  tipo_ocorrencia_id: string;
+  descricao: string;
+  severidade: SeveridadeOcorrencia;
+  observacao?: string;
+}

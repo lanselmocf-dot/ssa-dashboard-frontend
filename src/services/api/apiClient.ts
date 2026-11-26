@@ -11,6 +11,10 @@ export interface ApiResponse<T = any> {
   message?: string;
   meta?: any;
   pagination?: { pagina: number; limite: number; total: number; total_paginas: number };
+  /** Código HTTP da resposta (0 = sem conexão/timeout). */
+  status?: number;
+  /** Segundos informados pelo header Retry-After (HTTP 429). */
+  retryAfter?: number;
   error?: {
     code: string;
     message: string;
@@ -62,6 +66,9 @@ export class ApiClient {
         }
       }));
 
+      json.status = response.status;
+      json.retryAfter = Number(response.headers.get('Retry-After')) || undefined;
+
       if (!response.ok) {
         if (response.status === 401 && !endpoint.includes('/auth/login')) {
           localStorage.removeItem('@ssa:token');
@@ -76,6 +83,7 @@ export class ApiClient {
       if (err.name === 'AbortError') {
         return {
           success: false,
+          status: 0,
           error: {
             code: 'TIMEOUT',
             message: 'A requisição excedeu o tempo limite de espera (10s)'
@@ -84,6 +92,7 @@ export class ApiClient {
       }
       return {
         success: false,
+        status: 0,
         error: {
           code: 'NETWORK_ERROR',
           message: 'Erro de conexão com o servidor. Verifique se o backend está em execução.'

@@ -30,3 +30,18 @@ export function formatarSegundos(seg: number): string {
 export function hojeISO(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(new Date());
 }
+
+export function formatarMoeda(v: number | string | null | undefined): string {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0);
+}
+
+export function formatarNumero(v: number | string | null | undefined): string {
+  return new Intl.NumberFormat('pt-BR').format(Number(v) || 0);
+}
+
+/** Soma `n` dias a uma data "AAAA-MM-DD" (sem depender do fuso do navegador). */
+export function somarDiasISO(iso: string, n: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}

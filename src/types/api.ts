@@ -79,3 +79,15 @@ export interface Paginacao {
   total: number;
   total_paginas: number;
 }
+
+/** Contratos da Tela 02 (ERP). Ajuste se o backend devolver outros nomes de campo. */
+export interface Faturamento { diario: number; mensal: number }
+export interface Vendas { emitidos: number; pendentes: number }
+export interface EstoqueCritico {
+  codigo?: string;
+  produto: string;
+  estoque_atual: number;
+  ponto_reposicao: number;
+  severidade?: string;
+}
+export interface TopProduto { produto: string; quantidade: number; receita?: number; classe?: string }

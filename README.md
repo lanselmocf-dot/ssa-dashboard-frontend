@@ -83,3 +83,11 @@ docker run -p 5173:5173 ssa-frontend
 O frontend comunica-se com o backend através da variável de ambiente `VITE_API_URL`.  
 * Endpoint padrão de desenvolvimento: `http://localhost:3000/api`
 * Proxy automático configurado no `vite.config.ts` para evitar bloqueios de CORS em ambiente de desenvolvimento local.
+
+---
+
+## Telas 01 e 02 (adicionadas)
+
+* **Tela 01 `/login`** — validação de e-mail/senha, 401 amigável, bloqueio 429 com contagem regressiva (`Retry-After`).
+* **RBAC** — `src/routes/rbac.ts` (Operador→`/operador`, Supervisor→`/supervisor`, Gestor→`/gestor`, Admin→`/admin`). `RequireRole` redireciona perfis sem permissão para a própria tela.
+* **Tela 02 `/gestor`** — `pages/dashboard/DashboardGerencial.tsx`, consumindo `/erp/faturamento`, `/erp/vendas`, `/erp/estoque-critico` e `/erp/top-produtos`. Filtros enviados como `data_inicio`, `data_fim` e `filial_id`. Em HTTP 503 usa o último dado salvo (`@ssa:cache:*`, limpo no logout) e exibe aviso de contingência (RN-12).
